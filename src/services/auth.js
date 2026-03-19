@@ -1,12 +1,12 @@
-import { requestJson, setToken } from './http.js';
+import { postForm, setToken } from './http.js';
 
 // Replace this with your real login API URL.
-const LOGIN_URL = '/api/login';
+const LOGIN_URL = '/auth/login';
 
 export async function loginRequest(username, password) {
-  const data = await requestJson(LOGIN_URL, {
+  const data = await postForm(LOGIN_URL, {
     method: 'POST',
-    body: { username, password }
+    form: { username, password }
   });
 
   const token = data?.token;

@@ -13,33 +13,47 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
-export async function requestJson(url, { method = 'GET', headers = {}, body } = {}) {
-  // Requirement: each request reads token from localStorage first,
-  // and puts it into Authorization header.
+async function requestText(url, { method = 'GET', headers = {}, body } = {}) {
   const token = getToken();
   url = URL_PREFIX + url;
 
   const finalHeaders = new Headers(headers);
-  // The backend may expect raw token or `Bearer ${token}`.
-  // If needed, adjust here to match your backend.
   finalHeaders.set('Authorization', token ?? '');
 
+  const res = await fetch(url, { method, headers: finalHeaders, body });
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(text || `Request failed with status ${res.status}`);
+  }
+  return text;
+}
+
+export async function postJson(url, { method = 'POST', headers = {}, body } = {}) {
+  const finalHeaders = new Headers(headers);
   let finalBody;
   if (body !== undefined) {
     finalHeaders.set('Content-Type', 'application/json');
     finalBody = JSON.stringify(body);
   }
 
-  const res = await fetch(url, { method, headers: finalHeaders, body: finalBody });
-  const text = await res.text();
-  if (!res.ok) {
-    throw new Error(text || `Request failed with status ${res.status}`);
-  }
-  if (!text) return null;
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
+  const text = await requestText(url, { method, headers: finalHeaders, body: finalBody });
+  return getDataFromResponse(text);
 }
 
+// POST form (x-www-form-urlencoded) helper for typical login endpoints.
+// Example: requestForm('/api/login', { method: 'POST', form: { username, password } })
+export async function postForm(url, { method = 'POST', headers = {}, form } = {}) {
+  const finalHeaders = new Headers(headers);
+  finalHeaders.set('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
+
+  const body = form ? new URLSearchParams(form).toString() : '';
+  const text = await requestText(url, { method, headers: finalHeaders, body });
+  if (!text) return null;
+  return getDataFromResponse(text);
+}
+
+export function getDataFromResponse(result) {
+  result =  JSON.parse(text);
+  if (result.code != 200) throw new Error(result.message || `请求失败`);
+  return result.data;
+}
