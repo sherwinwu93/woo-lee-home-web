@@ -1,6 +1,6 @@
 const TOKEN_KEY = 'token';
 // const URL_PREFIX = 'http://116.198.225.38'
-const URL_PREFIX = 'http://localhost:9020'
+const URL_PREFIX = '/api'
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);

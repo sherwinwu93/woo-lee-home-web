@@ -8,13 +8,13 @@ export async function loginRequest(username, password) {
     method: 'POST',
     form: { username, password }
   });
+  console.log(data)
 
-  const token = data?.token;
-  if (!token) {
+  if (!data) {
     throw new Error('Login succeeded but no token was returned.');
   }
 
-  setToken(token);
-  return token;
+  setToken(data);
+  return data;
 }
 
